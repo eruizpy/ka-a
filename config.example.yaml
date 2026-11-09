@@ -1,0 +1,35 @@
+# Safe development defaults. Copy to config.local.yaml; never commit local secrets.
+mode: simulation
+hardware_enabled: false
+data_dir: data
+host: 127.0.0.1
+port: 8080
+allowed_hosts: [localhost, 127.0.0.1]
+secure_cookie: false
+# For a separately configured HTTPS reverse proxy, set its exact public origin.
+public_origin: ""
+timezone: America/Asuncion
+sample_seconds: 2
+stale_seconds: 15
+
+# Conservative software bounds, not species-specific watering recommendations.
+max_event_ml: 120
+max_daily_ml: 500
+max_runtime_seconds: 60
+retention_days: 30
+telemetry_interval_seconds: 300
+
+# BCM numbering. Active-high, normally-off motor drivers only.
+pump_pins: [17, 27]
+tank_ok_pin: 22
+leak_clear_pin: 23
+adc_address: 0x48
+sht31_address: 0x44
+gpio_chip: 0
+
+# Leave blank to keep AWS completely disabled.
+mqtt_endpoint: ""
+mqtt_client_id: ka-a-balcony
+mqtt_ca: ""
+mqtt_cert: ""
+mqtt_key: ""

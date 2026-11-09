@@ -1,0 +1,32 @@
+[Unit]
+Description=ka-a single-owner irrigation controller
+After=local-fs.target
+
+[Service]
+Type=simple
+User=kaa
+Group=kaa
+SupplementaryGroups=gpio i2c
+WorkingDirectory=/opt/kaa
+Environment=KAA_CONFIG=/etc/kaa/config.yaml
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=-/etc/kaa/environment
+ExecStart=/opt/kaa/.venv/bin/kaa controller
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=5
+StateDirectory=kaa
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/kaa
+DevicePolicy=closed
+DeviceAllow=/dev/gpiochip0 rw
+DeviceAllow=/dev/i2c-1 rw
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

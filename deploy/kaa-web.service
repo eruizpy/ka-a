@@ -1,0 +1,28 @@
+[Unit]
+Description=ka-a local administration dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=kaa
+Group=kaa
+WorkingDirectory=/opt/kaa
+Environment=KAA_CONFIG=/etc/kaa/config.yaml
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/kaa/.venv/bin/kaa serve
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=5
+StateDirectory=kaa
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/kaa
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

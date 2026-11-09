@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#183e32" />
+    <title>ka-a · Cuidado conectado</title>
+    <link rel="icon" href="/static/leaf.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/app.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <section id="login-screen" class="login-layout">
+      <div class="login-story">
+        <a class="brand" href="/">ka-a<span>●</span></a>
+        <span class="eyebrow">TECNOLOGÍA QUE CUIDA</span>
+        <h1>Más cerca<br />de lo que crece.</h1>
+        <p>
+          Un pequeño jardín. Un cuidado atento.<br />El control de tus plantas,
+          desde aquí.
+        </p>
+        <img
+          src="/static/bonsai.svg"
+          alt="Ilustración de un junípero en su maceta"
+          class="login-tree"
+        />
+        <small>Raspberry Pi · Python · Control local</small>
+      </div>
+      <div class="login-form-wrap">
+        <form id="login-form" class="login-form">
+          <span class="eyebrow">TU ESTACIÓN DE CULTIVO</span>
+          <h2>Bienvenido a ka-a</h2>
+          <p>Ingresá para consultar tus plantas y administrar el riego.</p>
+          <label for="password">Contraseña de administración</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autocomplete="current-password"
+            maxlength="256"
+          />
+          <p id="login-error" class="error" role="alert"></p>
+          <button type="submit" class="button primary">
+            Entrar al jardín <span>↗</span>
+          </button>
+          <small
+            >Primer acceso: creá tu contraseña con <code>kaa setup</code> en la
+            Raspberry.</small
+          >
+        </form>
+      </div>
+    </section>
+    <div id="application" hidden>
+      <aside class="sidebar">
+        <a class="brand" href="/">ka-a<span>●</span></a>
+        <p class="sidebar-caption">CUIDADO CONECTADO</p>
+        <nav aria-label="Navegación principal">
+          <button data-view="overview" class="nav-item active">
+            <span>◫</span> Mi jardín
+          </button>
+          <button data-view="plants" class="nav-item">
+            <span>♧</span> Mis plantas
+          </button>
+          <button data-view="history" class="nav-item">
+            <span>≋</span> Actividad
+          </button>
+          <button data-view="settings" class="nav-item">
+            <span>⚙</span> Estación
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="station-mark">
+            ◉
+            <span
+              >Estación balcón<small id="sidebar-mode">Conectando…</small></span
+            >
+          </div>
+          <button id="logout" class="logout">Cerrar sesión ↗</button>
+        </div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <span>MI ESPACIO / <strong id="breadcrumb">MI JARDÍN</strong></span>
+          <div class="topbar-right">
+            <span id="connection" class="connection">Conectando</span
+            ><span class="avatar" aria-label="Administrador">A</span>
+          </div>
+        </header>
+        <div class="page-content">
+          <div id="mode-banner" class="notice simulation" role="status">
+            SIMULACIÓN · Los datos son de prueba. No se acciona hardware.
+          </div>
+          <div
+            id="fault-banner"
+            class="notice danger"
+            role="alert"
+            hidden
+          ></div>
+          <section id="view-overview" class="view">
+            <div class="page-heading">
+              <div>
+                <span class="eyebrow" id="today">TU JARDÍN, HOY</span>
+                <h1>Cuidar también es observar.</h1>
+                <p>Dos juníperos, cada uno con su propio ritmo.</p>
+              </div>
+              <button class="button secondary" id="refresh">
+                ↻ Actualizar
+              </button>
+            </div>
+            <div class="metrics">
+              <article class="metric">
+                <span class="metric-icon">♧</span>
+                <div>
+                  <small>Plantas conectadas</small
+                  ><strong id="plant-count">—</strong><span>En tu balcón</span>
+                </div>
+              </article>
+              <article class="metric">
+                <span class="metric-icon">◌</span>
+                <div>
+                  <small>Temperatura ambiente</small
+                  ><strong id="temperature">—</strong
+                  ><span id="humidity">Esperando lectura</span>
+                </div>
+              </article>
+              <article class="metric">
+                <span class="metric-icon">◈</span>
+                <div>
+                  <small>Agua reservada hoy</small
+                  ><strong id="water-today">—</strong
+                  ><span>Incluye dosis interrumpidas</span>
+                </div>
+              </article>
+              <article class="metric">
+                <span class="metric-icon">↗</span>
+                <div>
+                  <small>Estado del depósito</small><strong id="tank">—</strong
+                  ><span id="leak">Esperando lectura</span>
+                </div>
+              </article>
+            </div>
+            <div class="section-heading">
+              <div>
+                <h2>Tus plantas</h2>
+                <p>Lecturas actuales y cuidado individual.</p>
+              </div>
+              <span class="pill">2 EJEMPLARES</span>
+            </div>
+            <div id="plant-cards" class="plant-grid"></div>
+            <div class="lower-grid">
+              <article class="panel controller-panel">
+                <div class="panel-title">
+                  <h2>Control de riego</h2>
+                  <span id="armed-badge" class="pill">—</span>
+                </div>
+                <p>
+                  Habilitar permite solicitar dosis. El riego automático
+                  requiere activación y calibración por planta.
+                </p>
+                <div class="actions">
+                  <button id="arm" class="button primary">
+                    Habilitar riego</button
+                  ><button id="emergency" class="button danger-button">
+                    ■ Parada de emergencia</button
+                  ><button id="reset" class="button secondary" hidden>
+                    Liberar parada
+                  </button>
+                </div>
+                <small
+                  >La parada queda bloqueada hasta que la liberes. Reiniciar
+                  siempre deshabilita el riego.</small
+                >
+              </article>
+              <article class="panel garden-note">
+                <span class="eyebrow">UN CUIDADO A LA VEZ</span>
+                <h2>La luz también importa.</h2>
+                <p>
+                  Tu balcón no recibe sol directo. Evaluá la luz a la altura del
+                  follaje antes de decidir la iluminación complementaria.
+                </p>
+                <span>OBSERVAR · MEDIR · AJUSTAR</span>
+              </article>
+            </div>
+          </section>
+          <section id="view-plants" class="view" hidden>
+            <div class="page-heading">
+              <div>
+                <span class="eyebrow">CUIDADO INDIVIDUAL</span>
+                <h1>Mis plantas</h1>
+                <p>Calibrá cada maceta antes de habilitar sus dosis.</p>
+              </div>
+            </div>
+            <div id="plant-list" class="plant-grid"></div>
+          </section>
+          <section id="view-history" class="view" hidden>
+            <div class="page-heading">
+              <div>
+                <span class="eyebrow">HISTORIAL LOCAL</span>
+                <h1>Lo que pasó en tu jardín.</h1>
+                <p>
+                  Órdenes, cambios y protecciones registradas por la estación.
+                </p>
+              </div>
+              <a class="button secondary" href="/api/export" download
+                >↓ Exportar estado</a
+              >
+            </div>
+            <article class="panel">
+              <h2>Dosis y reservas</h2>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Momento</th>
+                      <th>Planta</th>
+                      <th>Volumen reservado</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="commands"></tbody>
+                </table>
+              </div>
+            </article>
+            <article class="panel event-panel">
+              <h2>Registro de actividad</h2>
+              <div id="events"></div>
+            </article>
+          </section>
+          <section id="view-settings" class="view" hidden>
+            <div class="page-heading">
+              <div>
+                <span class="eyebrow">ADMINISTRACIÓN</span>
+                <h1>Tu estación ka-a.</h1>
+                <p>Control local. Conexión a la nube opcional.</p>
+              </div>
+            </div>
+            <div class="lower-grid">
+              <article class="panel">
+                <h2>Estado del sistema</h2>
+                <dl id="station-details"></dl>
+                <p class="muted">
+                  GPIO, modo de hardware y certificados se configuran
+                  localmente. El dashboard no cambia conexiones eléctricas.
+                </p>
+              </article>
+              <article class="panel">
+                <h2>Antes del primer riego</h2>
+                <ol class="checklist">
+                  <li>Verificá drenaje y contención de derrames.</li>
+                  <li>Medí el caudal real de cada bomba.</li>
+                  <li>Calibrá cada sonda en su sustrato.</li>
+                  <li>Probá fugas, depósito vacío y parada.</li>
+                  <li>Habilitá y supervisá una dosis pequeña.</li>
+                </ol>
+              </article>
+            </div>
+            <article id="simulation-panel" class="panel">
+              <span class="eyebrow">LABORATORIO SIN HARDWARE</span>
+              <h2>Probar la estación</h2>
+              <p>
+                Estas acciones sólo existen en simulación. Los valores de
+                ejemplo no son una recomendación de riego.
+              </p>
+              <div class="actions">
+                <button id="demo-calibrate" class="button secondary">
+                  Preparar calibración de ejemplo</button
+                ><button id="simulate-leak" class="button secondary">
+                  Simular fuga</button
+                ><button id="restore-sensors" class="button secondary">
+                  Restaurar sensores simulados
+                </button>
+              </div>
+            </article>
+          </section>
+          <footer>
+            <span>ka-a · Un jardín conectado a su entorno.</span
+            ><span id="last-update">Sin datos</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+    <dialog id="profile-dialog">
+      <form id="profile-form">
+        <div class="dialog-heading">
+          <div>
+            <span class="eyebrow">PERFIL DE CUIDADO</span>
+            <h2 id="profile-title">Configurar planta</h2>
+          </div>
+          <button
+            type="button"
+            class="icon-button"
+            data-close="profile-dialog"
+            aria-label="Cerrar configuración"
+          >
+            ×
+          </button>
+        </div>
+        <p class="muted">
+          El porcentaje es un índice relativo de la sonda, no contenido
+          volumétrico de agua. Los límites iniciales son de prueba.
+        </p>
+        <div class="form-grid">
+          <label class="full"
+            >Nombre<input name="name" required maxlength="60"
+          /></label>
+          <label
+            >Lectura en sustrato seco (mV)<input
+              name="dry_raw"
+              type="number"
+              min="0"
+              max="3300"
+              step="any"
+          /></label>
+          <label
+            >Lectura húmeda drenada (mV)<input
+              name="wet_raw"
+              type="number"
+              min="0"
+              max="3300"
+              step="any"
+          /></label>
+          <label class="checkbox full"
+            ><input name="calibration_confirmed" type="checkbox" /> Confirmo la
+            calibración de esta sonda y maceta</label
+          >
+          <label
+            >Caudal medido (ml/min)<input
+              name="flow_ml_min"
+              type="number"
+              min="0.1"
+              max="1000"
+              step="any"
+              required
+          /></label>
+          <label
+            >Dosis máxima por evento (ml)<input
+              name="dose_ml"
+              type="number"
+              min="0.1"
+              max="120"
+              step="any"
+              required
+          /></label>
+          <label class="checkbox full"
+            ><input name="flow_confirmed" type="checkbox" /> Confirmo que medí
+            el caudal de esta bomba</label
+          >
+          <label
+            >Umbral para iniciar (%)<input
+              name="dry_threshold"
+              type="number"
+              min="0"
+              max="99"
+              step="any"
+              required
+          /></label>
+          <label
+            >Corte por humedad (%)<input
+              name="wet_cutoff"
+              type="number"
+              min="1"
+              max="100"
+              step="any"
+              required
+          /></label>
+          <label
+            >Límite diario (ml)<input
+              name="daily_limit_ml"
+              type="number"
+              min="1"
+              max="500"
+              step="any"
+              required
+          /></label>
+          <label
+            >Intervalo mínimo (minutos)<input
+              name="minimum_interval_minutes"
+              type="number"
+              min="1"
+              max="1440"
+              required
+          /></label>
+          <label
+            >Inicio de horario automático (hora)<input
+              name="start_hour"
+              type="number"
+              min="0"
+              max="23"
+              required
+          /></label>
+          <label
+            >Fin de horario automático (hora)<input
+              name="end_hour"
+              type="number"
+              min="1"
+              max="24"
+              required
+          /></label>
+          <label class="checkbox full"
+            ><input name="automatic" type="checkbox" /> Activar riego automático
+            para esta planta</label
+          >
+        </div>
+        <p id="profile-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button
+            type="button"
+            class="button secondary"
+            data-close="profile-dialog"
+          >
+            Cancelar</button
+          ><button class="button primary" type="submit">Guardar perfil</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="water-dialog">
+      <form id="water-form">
+        <span class="eyebrow">DOSIS MANUAL</span>
+        <h2 id="water-title">Solicitar riego</h2>
+        <p>
+          La estación comprobará sensores, calibración y límites antes de
+          accionar la bomba.
+        </p>
+        <label for="volume">Volumen solicitado (ml)</label
+        ><input
+          id="volume"
+          name="volume"
+          type="number"
+          min="0.1"
+          step="0.1"
+          required
+        />
+        <p id="water-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button
+            type="button"
+            class="button secondary"
+            data-close="water-dialog"
+          >
+            Cancelar</button
+          ><button type="submit" class="button primary">Confirmar dosis</button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>
